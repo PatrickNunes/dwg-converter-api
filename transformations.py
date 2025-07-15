@@ -24,6 +24,7 @@ def dwg_to_dxf(dwg_path: Path,dxf_path: Path) -> bool:
         print(proc.stderr)
 
     return dxf_path
+
 def dxf_to_geojson(dxf_path:Path,geojson_path:Path):
     if not os.path.exists(dxf_path):
         raise FileNotFoundError(f"Arquivo DXF não encontrado: {dxf_path}")
