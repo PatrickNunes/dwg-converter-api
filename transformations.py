@@ -3,6 +3,8 @@ from pathlib import Path
 import os
 import pandas as pd
 import json
+import ezdxf
+from ezdxf import bbox
 
 def dwg_to_dxf(dwg_path: Path,dxf_path: Path):
     """
@@ -80,3 +82,35 @@ def set_geojson_colors(geojson_path:Path,df:pd.DataFrame):
         feature['properties']['color'] = color
     with open(str(geojson_path),'w',encoding='utf-8') as f:
         json.dump(dados_geojson,f,indent=None,ensure_ascii=False)
+def add_bounding_box_to_geojson(geojson_path:Path,dxf_path:Path):
+    doc = ezdxf.readfile(str(dxf_path))
+    msp = doc.modelspace()
+
+    box = bbox.extents(msp)
+    vertices = box.rect_vertices()
+
+    with open(str(geojson_path), 'r',encoding='utf-8') as f:
+        json_data = json.load(f)
+    
+    path = [[v.x, v.y] for v in vertices]
+    path.append(path[0])
+
+    print(path)
+
+    box_feature = {
+        "type": "Feature",
+        "properties":{
+            "name": "Box ModelSpace",
+            "isBoundingBox":"true"
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [path]
+        }
+    }
+
+    json_data['features'].append(box_feature)
+
+    with open(geojson_path, 'w',encoding='utf-8') as f:
+        json.dump(json_data, f, indent=None)
+

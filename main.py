@@ -6,7 +6,7 @@ from pathlib import Path
 import uuid
 import os
 
-from transformations import dwg_to_dxf,dxf_to_geojson,set_geojson_colors,dwg_to_geojson,change_geojson_timezone
+from transformations import dwg_to_dxf,dxf_to_geojson,set_geojson_colors,dwg_to_geojson,change_geojson_timezone,add_bounding_box_to_geojson
 from colors import get_layers_color
 
 app = FastAPI(title="DWG converter")
@@ -40,6 +40,7 @@ async def upload_dwg(background_tasks: BackgroundTasks,file: UploadFile = File(.
 
         dwg_to_dxf(tmp_path,dxf_path)
         dwg_to_geojson(tmp_path,geojson_path)
+        add_bounding_box_to_geojson(geojson_path,dxf_path)
         change_geojson_timezone(geojson_path,geojson_converted_path,"EPSG:31982","EPSG:4326")
         df = get_layers_color(dxf_path)
         set_geojson_colors(geojson_converted_path,df)
