@@ -6,7 +6,7 @@ from pathlib import Path
 import uuid
 import os
 
-from transformations import dwg_to_dxf,dxf_to_geojson,set_geojson_colors
+from transformations import dwg_to_dxf,dxf_to_geojson,set_geojson_colors,dwg_to_geojson,change_geojson_timezone
 from colors import get_layers_color
 
 app = FastAPI(title="DWG converter")
@@ -34,17 +34,19 @@ async def upload_dwg(background_tasks: BackgroundTasks,file: UploadFile = File(.
         file.file.close()
     try:
         uuidName = uuid.uuid4()
-        dxfPath = Path(f'./upload/{uuidName}.dxf')
-        geojsonPath = Path(f'./upload/{uuidName}.geojson')
+        dxf_path = Path(f'./upload/{uuidName}.dxf')
+        geojson_path = Path(f'./upload/{uuidName}.geojson')
+        geojson_converted_path = Path(f'./upload/converted_{uuidName}.geojson')
 
-        dwg_to_dxf(tmp_path,dxfPath)
-        dxf_to_geojson(dxfPath,geojsonPath)
-        df = get_layers_color(dxfPath)
-        set_geojson_colors(geojsonPath,df)
+        dwg_to_dxf(tmp_path,dxf_path)
+        dwg_to_geojson(tmp_path,geojson_path)
+        change_geojson_timezone(geojson_path,geojson_converted_path,"EPSG:31982","EPSG:4326")
+        df = get_layers_color(dxf_path)
+        set_geojson_colors(geojson_converted_path,df)
 
-        background_tasks.add_task(remove_files,[dxfPath,geojsonPath])
+        background_tasks.add_task(remove_files,[dxf_path,geojson_path,geojson_converted_path])
 
-        return FileResponse(str(geojsonPath)) 
+        return FileResponse(str(geojson_converted_path)) 
     finally:
         tmp_path.unlink(missing_ok=True)
 

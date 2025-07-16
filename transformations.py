@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import json
 
-def dwg_to_dxf(dwg_path: Path,dxf_path: Path) -> bool:
+def dwg_to_dxf(dwg_path: Path,dxf_path: Path):
     """
     Converte um DWG em DXF usando o dwgread (ou ODA Converter etc.)
     e devolve o caminho do DXF gerado.
@@ -23,12 +23,42 @@ def dwg_to_dxf(dwg_path: Path,dxf_path: Path) -> bool:
     if proc.stderr:
         print(proc.stderr)
 
-    return dxf_path
-
 def dxf_to_geojson(dxf_path:Path,geojson_path:Path):
     if not os.path.exists(dxf_path):
         raise FileNotFoundError(f"Arquivo DXF não encontrado: {dxf_path}")
     cmd = ['ogr2ogr', '-f' ,'GeoJSON', '-s_srs', 'EPSG:31982' ,'-t_srs', 'EPSG:4326', '--config', 'DXF_FEATURE_LIMIT_PER_BLOCK', '-1', str(geojson_path),str(dxf_path)]
+    proc = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    if proc.stdout:
+        print(proc.stdout)
+    if proc.stderr:
+        print(proc.stderr)
+
+def dwg_to_geojson(dwg_path:Path,geojson_path:Path):
+    if not os.path.exists(dwg_path):
+        raise FileNotFoundError(f"Arquivo DXF não encontrado: {dwg_path}")
+    cmd = ["dwgread", "-O", "Geojson", "-o", str(geojson_path), str(dwg_path)]
+
+    proc = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    if proc.stdout:
+        print(proc.stdout)
+    if proc.stderr:
+        print(proc.stderr)
+
+def change_geojson_timezone(geojson_path:Path,output_path:Path,input_timezone:str,output_timezone:str):
+    if not os.path.exists(geojson_path):
+        raise FileNotFoundError(f"Arquivo Geojson não encontrado: {geojson_path}")
+    cmd = ["ogr2ogr", "-f", "GeoJSON", "-s_srs", input_timezone, "-t_srs", output_timezone, str(output_path) ,str(geojson_path)]
+    
     proc = subprocess.run(
         cmd,
         capture_output=True,
