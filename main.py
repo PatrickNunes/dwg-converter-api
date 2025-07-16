@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File,BackgroundTasks
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import shutil, tempfile
 from pathlib import Path
 import uuid
@@ -9,6 +10,14 @@ from transformations import dwg_to_dxf,dxf_to_geojson,set_geojson_colors
 from colors import get_layers_color
 
 app = FastAPI(title="DWG converter")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/test")
 async def test():
